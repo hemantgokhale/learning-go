@@ -28,11 +28,13 @@ func (p Person) String() string {
 	return fmt.Sprintf("Person(FirstName=%s, LastName=%s, age=%d)", p.FirstName, p.LastName, p.Age)
 }
 
-const PeopleFile = "data/people.txt"
-const PeopleCount = 1000
+var workspaceDir = os.Getenv("GOPATH")
+var peopleFile = workspaceDir + "/src/github.com/hemantgokhale/learning-go/data/people.txt"
+
+const PeopleCount = 100
 
 func writePeople(firstNames, lastNames []string) {
-	file, err := os.Create(PeopleFile)
+	file, err := os.Create(peopleFile)
 
 	if err != nil {
 		log.Fatal(err)
@@ -69,7 +71,7 @@ func writePeople(firstNames, lastNames []string) {
 }
 
 func getFirstNames() (names []string) {
-	lines := GetLines("data/firstNames.txt")
+	lines := GetLines(workspaceDir + "/src/github.com/hemantgokhale/learning-go/data/firstNames.txt")
 
 	for _, line := range lines {
 		tokens := strings.Split(line, "\t")
@@ -79,7 +81,7 @@ func getFirstNames() (names []string) {
 }
 
 func getLastNames() (names []string) {
-	lines := GetLines("data/lastNames.txt")
+	lines := GetLines(workspaceDir + "/src/github.com/hemantgokhale/learning-go/data/lastNames.txt")
 
 	for _, line := range lines {
 		tokens := strings.Split(line, " ")
@@ -99,7 +101,7 @@ func analyze() {
 }
 
 func readPeople() (people []Person) {
-	lines := GetLines(PeopleFile)
+	lines := GetLines(peopleFile)
 
 	for _, line := range lines {
 		var person Person
