@@ -1,4 +1,5 @@
-Get the project:
+Install and configure go if you haven't done so already: https://golang.org/doc/install
+
 ```
 go get github.com/hemantgokhale/learning-kotlin 
 ```
