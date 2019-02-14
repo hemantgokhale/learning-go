@@ -14,8 +14,26 @@ import (
 
 func main() {
 	rand.Seed(time.Now().Unix())
-	writePeople(getFirstNames(), getLastNames())
-	analyze()
+
+	firstNames, err := getFirstNames()
+	checkForError(err)
+
+	lastNames, err := getLastNames()
+	checkForError(err)
+
+	err = writePeople(firstNames, lastNames)
+	checkForError(err)
+
+	err = analyze()
+	checkForError(err)
+}
+
+func checkForError(err error) {
+
+	if err != nil {
+		log.Println("*** There was an error ***")
+		log.Fatal(err)
+	}
 }
 
 type Person struct {
@@ -33,19 +51,15 @@ var peopleFile = workspaceDir + "/src/github.com/hemantgokhale/learning-go/data/
 
 const PeopleCount = 100
 
-func writePeople(firstNames, lastNames []string) {
+func writePeople(firstNames, lastNames []string) (err error) {
 	file, err := os.Create(peopleFile)
 
 	if err != nil {
-		log.Fatal(err)
+		return
 	}
 
 	defer func() {
-		closeErr := file.Close()
-
-		if closeErr != nil {
-			log.Fatal(closeErr)
-		}
+		err = file.Close()
 	}()
 
 	for i := 0; i < PeopleCount; i++ {
@@ -57,21 +71,24 @@ func writePeople(firstNames, lastNames []string) {
 
 		personBytes, err := json.Marshal(person)
 		if err != nil {
-			fmt.Println(err)
-			continue
+			break
 		}
 
 		_, err = fmt.Fprintln(file, string(personBytes))
 		if err != nil {
-			fmt.Println(err)
+			break
 		}
 	}
 
 	fmt.Printf("A dataset with %d people generated.\n", PeopleCount)
+	return
 }
 
-func getFirstNames() (names []string) {
-	lines := GetLines(workspaceDir + "/src/github.com/hemantgokhale/learning-go/data/firstNames.txt")
+func getFirstNames() (names []string, err error) {
+	lines, err := getLines(workspaceDir + "/src/github.com/hemantgokhale/learning-go/data/firstNames.txt")
+	if err != nil {
+		return
+	}
 
 	for _, line := range lines {
 		tokens := strings.Split(line, "\t")
@@ -80,8 +97,11 @@ func getFirstNames() (names []string) {
 	return
 }
 
-func getLastNames() (names []string) {
-	lines := GetLines(workspaceDir + "/src/github.com/hemantgokhale/learning-go/data/lastNames.txt")
+func getLastNames() (names []string, err error) {
+	lines, err := getLines(workspaceDir + "/src/github.com/hemantgokhale/learning-go/data/lastNames.txt")
+	if err != nil {
+		return
+	}
 
 	for _, line := range lines {
 		tokens := strings.Split(line, " ")
@@ -90,26 +110,35 @@ func getLastNames() (names []string) {
 	return
 }
 
-func analyze() {
-	people := readPeople()
+func analyze() (err error) {
+	people, err := readPeople()
+	if err != nil {
+		return
+	}
 
 	const topCount = 3
 	distinctFirstNames(people)
 	minAndMaxAge(people)
 	oldestPeople(people, topCount)
 	popularLastNames(people, topCount)
+
+	return
 }
 
-func readPeople() (people []Person) {
-	lines := GetLines(peopleFile)
+func readPeople() (people []Person, err error) {
+	lines, err := getLines(peopleFile)
+	if err != nil {
+		return
+	}
 
 	for _, line := range lines {
 		var person Person
 		err := json.Unmarshal([]byte(line), &person)
 
-		if err == nil {
-			people = append(people, person)
+		if err != nil {
+			break
 		}
+		people = append(people, person)
 	}
 	return
 }
@@ -174,18 +203,15 @@ func popularLastNames(people []Person, topCount int) {
 	}
 }
 
-func GetLines(fileName string) (lines []string) {
+func getLines(fileName string) (lines []string, err error) {
 
 	file, err := os.Open(fileName)
 	if err != nil {
-		log.Fatal(err)
+		return
 	}
-	defer func() {
-		closeErr := file.Close()
 
-		if closeErr != nil {
-			log.Fatal(closeErr)
-		}
+	defer func() {
+		err = file.Close()
 	}()
 
 	scanner := bufio.NewScanner(file)
@@ -193,8 +219,6 @@ func GetLines(fileName string) (lines []string) {
 		lines = append(lines, scanner.Text())
 	}
 
-	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
-	}
+	err = scanner.Err()
 	return
 }
